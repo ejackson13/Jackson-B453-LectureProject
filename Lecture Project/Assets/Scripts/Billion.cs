@@ -5,7 +5,7 @@ using UnityEngine;
 public class Billion : MonoBehaviour
 {
 
-    public string color;
+    public string billionColor;
     public Vector3 moveTo;
     public bool reachedStart;
     private Transform rigTransform;

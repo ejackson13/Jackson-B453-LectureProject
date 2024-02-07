@@ -395,7 +395,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b235f776e82ba4f439e72ada0914d9d8, type: 2}
+  - {fileID: 2100000, guid: bec90267d38fa774d93c9e82cd79a5c3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1968,12 +1968,20 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2495151151186331166, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
       propertyPath: m_Name
-      value: BillionareBase (1)
+      value: YellowBase
       objectReference: {fileID: 0}
     - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
       propertyPath: color
       value: yellow
       objectReference: {fileID: 0}
+    - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
+      propertyPath: baseColor
+      value: yellow
+      objectReference: {fileID: 0}
+    - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
+      propertyPath: flagPrefab
+      value: 
+      objectReference: {fileID: 6542742122287192360, guid: c787ff4fb929dd6498eede79bd44b6af, type: 3}
     - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
       propertyPath: billionPrefab
       value: 
@@ -2168,10 +2176,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 982498106953053232, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].time
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 982498106953053232, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
+      value: 0.016084671
+      objectReference: {fileID: 0}
     - target: {fileID: 2495151151186331166, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
       propertyPath: m_Name
-      value: BillionareBase
+      value: BlueBase
       objectReference: {fileID: 0}
+    - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
+      propertyPath: baseColor
+      value: blue
+      objectReference: {fileID: 0}
+    - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
+      propertyPath: flagPrefab
+      value: 
+      objectReference: {fileID: 6542742122287192360, guid: 3679f9d76ca7aa84cb0e365325b57b42, type: 3}
     - target: {fileID: 4378609754133570124, guid: 02124560dc8b0404793b7d20e6998926, type: 3}
       propertyPath: billionPrefab
       value: 
