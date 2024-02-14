@@ -137,6 +137,7 @@ MonoBehaviour:
   billionColor: 
   moveTo: {x: 0, y: 0, z: 0}
   reachedStart: 0
+  maxSpeed: 5
 --- !u!50 &-3532901923400184112
 Rigidbody2D:
   serializedVersion: 4

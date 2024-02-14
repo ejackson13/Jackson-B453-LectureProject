@@ -18,7 +18,7 @@ public class BillionareBase : MonoBehaviour
 
     private Vector3 spawnPosition;
     private Vector3 moveTo;
-    private int numFlags; // the number of flags of the current color currently on screen
+    public int numFlags; // the number of flags of the current color currently on screen
     private GameObject flagClicked; // the initial position the flag that is being clicked and dragged
     private Boolean wasFlagClicked = false; // used to track whether or not a flag was initially clicked (to determine if a line needs to be drawn when clicking and dragging)
 
@@ -191,5 +191,6 @@ public class BillionareBase : MonoBehaviour
         // set color of billion so it knows what to attack (might not be necessary depending on how I structure the rest of the code)
         billion.GetComponent<Billion>().billionColor = baseColor;
         billion.GetComponent<Billion>().moveTo = moveTo;
+        billion.transform.SetParent(transform, true); // make billions children of the base that spawns them
     }
 }
