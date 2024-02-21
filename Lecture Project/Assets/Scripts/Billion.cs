@@ -20,6 +20,11 @@ public class Billion : MonoBehaviour
     public float maxSpeed; // the max speed the billions can reach
     private int numFlags;
 
+    public float minCircleSize = .3f; // the minimum size of the inner circle (as a proportion, so between 0 and 1)
+    public float maxHealth = 100; // the amount of starting health the billion gets
+    public float currentHealth; // the amount of health the billion currently has
+    public float clickDamage = 25; // the amount of damage the billion takes when being clicked
+
     // Start is called before the first frame update
     void Start()
     {
@@ -27,6 +32,7 @@ public class Billion : MonoBehaviour
         reachedStart = false;
         rb = GetComponent<Rigidbody2D>();
         rigTransform = rb.transform;
+        currentHealth = maxHealth;
     }
 
     // Update is called once per frame
@@ -40,7 +46,21 @@ public class Billion : MonoBehaviour
         {
             MoveToFlag();
         }
-        
+
+
+        // check for middle mouse click
+        if (Input.GetMouseButtonDown(2))
+        {
+            // get mouse position
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+            // check if the click occurred over the current billion
+            if (GetComponent<Collider2D>().OverlapPoint(mousePos))
+            {
+                TakeDamage(clickDamage);
+            }
+        }
+
     }
 
 
@@ -57,6 +77,7 @@ public class Billion : MonoBehaviour
                 numFlags = actualNumFlags;
                 newFlags = true;
             }
+
         }
 
         // if a flag is not set, or the flag's position changes, find (new) closest flag
@@ -106,8 +127,8 @@ public class Billion : MonoBehaviour
         {
             float distToFlag = Vector2.Distance(transform.position, closestFlag.position);
             Vector2 dir = (closestFlag.position - transform.position).normalized;
-            
-            
+
+
             //Debug.Log("Distance: " + distToFlag);
             //Debug.Log("Direction: " + dir);
             //Debug.Log("Slope: " + slope);
@@ -129,7 +150,7 @@ public class Billion : MonoBehaviour
             // set velocity based on sinusoidal function with distance as the x axis and velocity on the y axis
             rb.velocity = dir * (maxSpeed * Mathf.Sin(distToFlag * ((2 * Mathf.PI) / (Vector2.Distance(startPosition, flagLastPos) * 2))) + .1f);
             //Debug.Log(rb.velocity);
-            
+
         }
     }
 
@@ -146,5 +167,33 @@ public class Billion : MonoBehaviour
         rigTransform.position = new Vector3(rigTransform.position.x + xChange, rigTransform.position.y - yChange, rigTransform.position.z);
 
         reachedStart = rigTransform.position.x == moveTo.x && rigTransform.position.y == moveTo.y;
+    }
+
+
+
+    public void TakeDamage(float damageDealt)
+    {
+        // decrease health by amount of damage taken
+        currentHealth -= damageDealt;
+
+        // destroy the billion if its health drops to or below zero
+        if (currentHealth <= 0 )
+        {
+            Die();
+            return; // prevent any other code from executing
+        }
+
+        // reduce size of inner circle with lerp
+        float scale = Mathf.Lerp(minCircleSize, 1, currentHealth / maxHealth); // use lerp to get scale
+        Debug.Log("Health %: " + currentHealth / maxHealth);
+        Debug.Log("Scale: " + scale);
+        gameObject.transform.GetChild(0).transform.localScale = new Vector3(scale, scale, gameObject.transform.GetChild(0).transform.localScale.z); // update scale of just InnerCircle child object
+    }
+
+
+
+    private void Die()
+    {
+        Destroy(gameObject);
     }
 }
