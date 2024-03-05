@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - flag
+  - billion
+  - base
+  - wall
   layers:
   - Default
   - TransparentFX

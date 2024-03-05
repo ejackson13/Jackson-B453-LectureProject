@@ -98,7 +98,7 @@ GameObject:
   - component: {fileID: 2753886388759495553}
   - component: {fileID: -3532901923400184112}
   m_Layer: 0
-  m_Name: BillionBlue
+  m_Name: Billion
   m_TagString: billion
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -229,9 +229,6 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 0
   clickDamage: 20
-  bulletPrefab: {fileID: 1672007767689862694, guid: 7c7ee704cbca405499f4d05eedf588a7, type: 3}
-  shootDistance: 3
-  shootInterval: 1
 --- !u!50 &-3532901923400184112
 Rigidbody2D:
   serializedVersion: 4

@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 982498106953053232}
   m_Layer: 0
   m_Name: BillionareBase
-  m_TagString: Untagged
+  m_TagString: base
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -101,8 +101,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseColor: 
   billionPrefab: {fileID: 0}
-  spawnInterval: 2
+  spawnInterval: 4
   flagPrefab: {fileID: 0}
+  numFlags: 0
 --- !u!58 &1746659383932790532
 CircleCollider2D:
   m_ObjectHideFlags: 0
