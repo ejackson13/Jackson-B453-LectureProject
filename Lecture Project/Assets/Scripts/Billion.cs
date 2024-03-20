@@ -72,92 +72,48 @@ public class Billion : MonoBehaviour
     // finds nearest flag and moves billion toward it
     private void MoveToFlag()
     {
-        // check for new flags (if new ones can be created
-        bool newFlags = false;
-        if (numFlags < 2)
+        // get all flags of the billion's color
+        List<GameObject> allFlags = BillionFlag.GetAllFlagsByColor(billionColor);
+
+        // find nearest flag (only if there are flags on the field)
+        if (allFlags.Count > 0)
         {
-            int actualNumFlags = transform.parent.gameObject.GetComponent<BillionareBase>().numFlags;
-            if (actualNumFlags != numFlags)
+            float closestDist = Mathf.Infinity;
+            Transform closestFlagFound = allFlags[0].transform;
+
+            // do a simple for loop through the flags to find the closest one to the mouse position
+            foreach (GameObject f in allFlags)
             {
-                numFlags = actualNumFlags;
-                newFlags = true;
-            }
-
-        }
-
-        // if a flag is not set, or the flag's position changes, find (new) closest flag
-        if (closestFlag == null || closestFlag.position != flagLastPos || newFlags)
-        {
-            // reuse code from flag placement to find nearest flag
-
-            // get all items tagged withflag
-            //GameObject[] allFlags = GameObject.FindGameObjectsWithTag("flag");
-            List<GameObject> allFlags = BillionFlag.GetAllFlagsByColor(billionColor);
-
-            // find nearest flag (only if there are flags on the field)
-            if (allFlags.Count > 0)
-            {
-                float closestDist = Mathf.Infinity;
-                closestFlag = allFlags[0].transform;
-
-                // do a simple for loop through the flags to find the closest one to the mouse position
-                foreach (GameObject f in allFlags)
+                float currentDist = Vector3.Distance(transform.position, f.transform.position);
+                if (currentDist < closestDist)
                 {
-                    float currentDist = Vector3.Distance(transform.position, f.transform.position);
-                    if (currentDist < closestDist)
-                    {
-                        closestDist = currentDist;
-                        closestFlag = f.transform;
-                        flagLastPos = new Vector3(f.transform.position.x, f.transform.position.y, f.transform.position.z);
-                        startPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-                        //slope = maxSpeed / (Vector2.Distance(startPosition, flagLastPos) / 2);
-                        //Debug.Log("Slope: " + slope);
-                    }
-                }
-
-                // protect against case where there are only flags of different colors
-                if (closestFlag.gameObject.GetComponent<BillionFlag>().flagColor != billionColor)
-                {
-                    closestFlag = null;
-                    rb.velocity = Vector3.zero;
+                    closestDist = currentDist;
+                    closestFlagFound = f.transform;
+                    //flagLastPos = new Vector3(f.transform.position.x, f.transform.position.y, f.transform.position.z);
+                    //startPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
                 }
             }
-            // no flags on the field, make closestFlag null again (should already be null, but this is safe)
-            else
+
+            // check that the flag moved before moving toward it
+            if (closestFlag == null || closestFlagFound.position != closestFlag.position)
             {
-                closestFlag = null;
-                rb.velocity = Vector3.zero;
+                closestFlag = closestFlagFound;
+                flagLastPos = new Vector3(closestFlag.position.x, closestFlag.position.y, closestFlag.position.z);
+                startPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
             }
-        }
-        // if a flag is set, move toward it
-        else
-        {
+
+            // if a flag is set, move toward it
             float distToFlag = Vector2.Distance(transform.position, closestFlag.position);
             Vector2 dir = (closestFlag.position - transform.position).normalized;
 
-
-            //Debug.Log("Distance: " + distToFlag);
-            //Debug.Log("Direction: " + dir);
-            //Debug.Log("Slope: " + slope);
-
-            // alternate linear function
-            /*
-            Debug.Log("Formula: " + dir * ((distToFlag * slope * -1) + (maxSpeed * 2 + .1f)));
-            if (distToFlag < (Vector2.Distance(startPosition, flagLastPos) / 2))
-            {
-                rb.velocity = dir * (distToFlag * slope);
-            }
-            else
-            {
-                //Vector2 v = dir * ((distToFlag * slope * -1) + (maxSpeed * 2));
-                rb.velocity = dir * ((distToFlag * slope * -1) + (maxSpeed * 2 + .1f));
-            }
-            */
-
             // set velocity based on sinusoidal function with distance as the x axis and velocity on the y axis
             rb.velocity = dir * (maxSpeed * Mathf.Sin(distToFlag * ((2 * Mathf.PI) / (Vector2.Distance(startPosition, flagLastPos) * 2))) + .1f);
-            //Debug.Log(rb.velocity);
-
+        }
+        // no flags on the field, make closestFlag null again (should already be null, but this is safe)
+        else
+        {
+            closestFlag = null;
+            rb.velocity = Vector3.zero;
         }
     }
 
@@ -313,5 +269,28 @@ public class Billion : MonoBehaviour
         }
 
         return nearestBillion;
+    }
+
+
+
+
+
+
+
+
+    // wrapper for GameObject.FindGameObjectsWithTag() that returns all enemy billions (all billions that don't match the given color)
+    public static List<GameObject> GetAllEnemyBillions(string testColor)
+    {
+        GameObject[] allBillions = GameObject.FindGameObjectsWithTag("billion");
+        List<GameObject> billionsOfColor = new List<GameObject>();
+
+        foreach (GameObject billion in allBillions)
+        {
+            if (billion.GetComponent<Billion>().billionColor != testColor)
+            {
+                billionsOfColor.Add(billion);
+            }
+        }
+        return billionsOfColor;
     }
 }

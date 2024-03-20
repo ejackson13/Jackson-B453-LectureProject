@@ -22,6 +22,15 @@ public class BillionareBase : MonoBehaviour
     private GameObject flagClicked; // the initial position the flag that is being clicked and dragged
     private Boolean wasFlagClicked = false; // used to track whether or not a flag was initially clicked (to determine if a line needs to be drawn when clicking and dragging)
 
+    public float turnSpeed = 2f; // the max speed at which the base will rotate in a given frame (in degrees)
+    public GameObject bulletPrefab; // the prefab of the bullets that we shoot
+    public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
+    public float shootInterval = 1.5f; // the interval on which billions will shoot 
+    private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
+    public float bulletSpeed = 3f; // the speed at which a bullet will travel
+    public float bulletDistance = 3; // the max distance a bullet will travel
+    public float bulletDamage = 40; // the damage the bullet deals
+
     // Start is called before the first frame update
     void Start()
     {
@@ -55,6 +64,9 @@ public class BillionareBase : MonoBehaviour
             // call Place_Flag with the mouse input for placing flags as the right mouse button
             Put_Flag(1);
         }
+
+
+        PointToNearestEnemy();
     }
 
 
@@ -192,5 +204,125 @@ public class BillionareBase : MonoBehaviour
         billion.GetComponent<Billion>().billionColor = baseColor;
         billion.GetComponent<Billion>().moveTo = moveTo;
         billion.transform.SetParent(transform, true); // make billions children of the base that spawns them
+    }
+
+
+    private void PointToNearestEnemy()
+    {
+        // Get nearest enemy
+        GameObject nearestEnemy = GetNearestEnemyBillion();
+        if (nearestEnemy == null) // return if there are no enemy billions
+        {
+            return;
+        }
+        Vector2 nearestEnemyPos = nearestEnemy.transform.position;
+
+        Vector2 thisPos = transform.position; // convert the position of this billion to a vector 2
+
+        // get rotation angle to billion
+        Vector2 diff = nearestEnemyPos - thisPos; // get difference between the two vectors
+        float angleRad = Mathf.Atan2(diff.y, diff.x);
+        float angleDeg = angleRad * Mathf.Rad2Deg;
+        if (angleDeg < 0)
+        {
+            angleDeg += 360;
+        }
+        else if (angleDeg >= 360)
+        {
+            angleDeg -= 360;
+        }
+
+        // get current rotation angle
+        float currentRot = transform.GetChild(0).transform.eulerAngles.z;
+        if (currentRot < 0)
+        {
+            currentRot += 360;
+        } else if (currentRot >= 360){
+            currentRot -= 360;
+        }
+
+        // update rotation angle
+        float newRot = 0;
+        float deltaRot = angleDeg - currentRot;
+        if (Mathf.Abs(deltaRot) <= turnSpeed)
+        {
+            newRot = angleDeg;
+        }
+        else
+        {
+            float turnAmt = turnSpeed;
+
+            // rotate cw or ccw depending on shortest distance to face the billion
+            if (deltaRot > 180)
+            {
+                turnAmt *= -1;
+            }
+            else if (deltaRot < 0 && deltaRot > -180)
+            {
+                turnAmt *= -1;
+            }
+            newRot = currentRot + turnAmt;
+        }
+
+        transform.GetChild(0).transform.eulerAngles = new Vector3(0, 0, newRot);
+
+        // shoot if enough time has passed and there is an enemy within range
+        if (Vector2.Distance(thisPos, nearestEnemyPos) <= shootDistance && Time.time >= nextFire)
+        {
+            // spawn at end of turret
+            float distFromCenter = GetComponent<CircleCollider2D>().radius * transform.localScale.x + (bulletPrefab.GetComponent<BoxCollider2D>().size.y/2); // get distance from center that bullet should spawn at
+            Vector2 direction = new Vector2(Mathf.Cos(Mathf.Deg2Rad * newRot), Mathf.Sin(Mathf.Deg2Rad * newRot));
+            Vector3 startPos = (Vector2)transform.position + (direction.normalized * distFromCenter); // set start position to be distFromCenter away from the center of the billion
+            startPos.z = transform.position.z;
+
+            // instantiate bullet
+            GameObject bullet = Instantiate(bulletPrefab, startPos, Quaternion.identity);
+
+            // rotate bullet according to direction billion is facing
+            bullet.transform.eulerAngles = new Vector3(0, 0, newRot - 90);
+            //Debug.Log(billionColor + " spawned at: " + startPos + " | billion at: " + transform.position + " | actually at: " + bullet.transform.position);
+
+            // give bullet necessary information
+            //bullet.GetComponent<BillionBullet>().bulletColor = billionColor;
+            bullet.GetComponent<BillionBullet>().startPosition = startPos;
+            bullet.GetComponent<BillionBullet>().direction = direction.normalized;
+            bullet.GetComponent <BillionBullet>().bulletSpeed = bulletSpeed;
+            bullet.GetComponent<BillionBullet>().bulletDistance = bulletDistance;
+            bullet.GetComponent<BillionBullet>().bulletDamage = bulletDamage;
+
+            // set time for next fire
+            nextFire = Time.time + shootInterval;
+        }
+
+    }
+
+
+    private GameObject GetNearestEnemyBillion()
+    {
+        // get all billions on screen
+        List<GameObject> allBillions = Billion.GetAllEnemyBillions(baseColor);
+
+        // make sure we return null if there are no enemy billions
+        if (allBillions.Count == 0)
+        {
+            return null;
+        }
+
+        // get closest billion
+        GameObject nearestBillion = allBillions[0];
+        float nearestDist = Mathf.Infinity;
+        foreach (GameObject billion in allBillions)
+        {
+            float currentDist = Vector2.Distance(this.transform.position, billion.transform.position); // use vector2 distance so that z values aren't considered in calculation
+
+            // check that billion is enemy and that it is closer than the previous closest
+            if (currentDist < nearestDist)
+            {
+                nearestBillion = billion;
+                nearestDist = currentDist;
+            }
+        }
+
+        return nearestBillion;
     }
 }

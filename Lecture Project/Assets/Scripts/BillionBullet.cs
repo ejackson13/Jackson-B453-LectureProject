@@ -48,7 +48,7 @@ public class BillionBullet : MonoBehaviour
             Destroy(gameObject);
         }
         // destroy the bullet if it hits a wall or a billionare base
-        else if (other.gameObject.CompareTag("wall") || other.gameObject.CompareTag("base"))
+        else if (!other.gameObject.CompareTag("billion"))
         {
             Destroy(gameObject);
         }
