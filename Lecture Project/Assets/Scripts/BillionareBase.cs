@@ -2,11 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 using static UnityEditor.PlayerSettings;
 
-public class BillionareBase : MonoBehaviour
+public class BillionareBase : MonoBehaviour, IDamagable
 {
+    [Header("General Info")]
     public string baseColor;
     public GameObject billionPrefab;
     public float spawnInterval;
@@ -22,6 +23,7 @@ public class BillionareBase : MonoBehaviour
     private GameObject flagClicked; // the initial position the flag that is being clicked and dragged
     private Boolean wasFlagClicked = false; // used to track whether or not a flag was initially clicked (to determine if a line needs to be drawn when clicking and dragging)
 
+    [Header("Shooting variables")]
     public float turnSpeed = 2f; // the max speed at which the base will rotate in a given frame (in degrees)
     public GameObject bulletPrefab; // the prefab of the bullets that we shoot
     public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
@@ -30,6 +32,16 @@ public class BillionareBase : MonoBehaviour
     public float bulletSpeed = 3f; // the speed at which a bullet will travel
     public float bulletDistance = 3; // the max distance a bullet will travel
     public float bulletDamage = 40; // the damage the bullet deals
+
+    [Header("Health and XP")]
+    public float maxHealth = 200; // the amount of starting health the base gets
+    public float currentHealth; // the amount of health the base currently has
+    public float xpValue = 20; // the amount of xp the killing base gets when this base is killed
+    public float currentXp = 0; // the current amount of xp the base has
+    public float nextLevel = 100; // the amount of xp the base needs to get to the next level
+
+    private Image healthBar; // the image containing the radial health bar UI element
+    private Image xpBar; // the image containing the radial xp bar UI element
 
     // Start is called before the first frame update
     void Start()
@@ -48,6 +60,16 @@ public class BillionareBase : MonoBehaviour
         //spawnPosition = new Vector3(transform.position.x + (collider.radius * transform.localScale.x + .1f), transform.position.y - (collider.radius * transform.localScale.x + .1f), transform.position.z);
         spawnPosition = transform.position;
         moveTo = new Vector3(transform.position.x + (circleCollider.radius * transform.localScale.x + .1f), transform.position.y - (circleCollider.radius * transform.localScale.x + .1f), transform.position.z);
+
+        // get the UI elements
+        healthBar = transform.GetChild(1).GetChild(0).gameObject.GetComponent<Image>();
+        xpBar = transform.GetChild(1).GetChild(1).gameObject.GetComponent<Image>();
+
+        // initialize UI values
+        healthBar.fillAmount = 1;
+        xpBar.fillAmount = 0;
+
+        currentHealth = maxHealth;
     }
 
     // Update is called once per frame
@@ -210,7 +232,7 @@ public class BillionareBase : MonoBehaviour
     private void PointToNearestEnemy()
     {
         // Get nearest enemy
-        GameObject nearestEnemy = GetNearestEnemyBillion();
+        GameObject nearestEnemy = GetNearestEnemy();
         if (nearestEnemy == null) // return if there are no enemy billions
         {
             return;
@@ -297,32 +319,98 @@ public class BillionareBase : MonoBehaviour
     }
 
 
-    private GameObject GetNearestEnemyBillion()
+    private GameObject GetNearestEnemy()
     {
-        // get all billions on screen
-        List<GameObject> allBillions = Billion.GetAllEnemyBillions(baseColor);
+        // get all enemies on screen
+        List<GameObject> allEnemies = IDamagable.GetAllEnemyDamagableObjects(baseColor);
 
-        // make sure we return null if there are no enemy billions
-        if (allBillions.Count == 0)
+        // make sure we return null if there are no enemies
+        if (allEnemies.Count == 0 )
         {
             return null;
         }
 
-        // get closest billion
-        GameObject nearestBillion = allBillions[0];
+        // get closest enemy
+        GameObject nearestEnemy = allEnemies[0];
         float nearestDist = Mathf.Infinity;
-        foreach (GameObject billion in allBillions)
+        foreach (GameObject enemy in allEnemies)
         {
-            float currentDist = Vector2.Distance(this.transform.position, billion.transform.position); // use vector2 distance so that z values aren't considered in calculation
+            float currentDist = Vector2.Distance(this.transform.position, enemy.transform.position); // use vector2 distance so that z values aren't considered in calculation
 
-            // check that billion is enemy and that it is closer than the previous closest
+            // check that enemy is closer than the previous closest
             if (currentDist < nearestDist)
             {
-                nearestBillion = billion;
+                nearestEnemy = enemy;
                 nearestDist = currentDist;
             }
         }
 
-        return nearestBillion;
+        return nearestEnemy;
+    }
+
+
+
+    public void TakeDamage(float damageDealt, string attackerColor)
+    {
+        // decrease health by amount of damage taken
+        currentHealth -= damageDealt;
+
+        // destroy the base if its health drops to or below zero
+        if (currentHealth <= 0)
+        {
+            // get the base whose billion killed this base
+            GameObject[] allBases = GameObject.FindGameObjectsWithTag("base");
+            GameObject killingBase = null;
+            foreach (GameObject b in allBases)
+            {
+                if (b.GetComponent<BillionareBase>().baseColor == attackerColor)
+                {
+                    killingBase = b;
+                    break;
+                }
+            }
+
+            // dole out experience points to base whose billion killed this base
+            if (killingBase != null)
+            {
+                killingBase.GetComponent<BillionareBase>().GainXP(xpValue);
+            }
+
+            Die();
+            return; // prevent any other code from executing
+        }
+
+        // decrease angle of radial health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
+        
+    }
+
+
+
+    public void Die()
+    {
+        Destroy(gameObject);
+    }
+
+
+
+    public void GainXP(float xpAmount)
+    {
+        currentXp += xpAmount;
+
+        if (currentXp >= nextLevel)
+        {
+            LevelUp();
+        }
+
+
+        // update radial xp bar
+        xpBar.fillAmount = currentXp / nextLevel;
+    }
+
+
+    public void LevelUp()
+    {
+
     }
 }

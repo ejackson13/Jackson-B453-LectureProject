@@ -38,17 +38,27 @@ public class BillionBullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // check if the object it hits is an enemy billion
-        if (other.gameObject.CompareTag("billion") && other.gameObject.GetComponent<Billion>().billionColor != bulletColor)
+        // check if the object it hits a damagable object
+        if (other.gameObject.GetComponent<IDamagable>() != null)
         {
-            // deal damage to billion
-            other.gameObject.GetComponent<Billion>().TakeDamage(bulletDamage);
+            // check that the color is different
+            if (other.gameObject.GetComponent<Billion>() != null && other.gameObject.GetComponent<Billion>().billionColor == bulletColor)
+            {
+                return;
+            }
+            else if (other.gameObject.GetComponent<BillionareBase>() != null && other.gameObject.GetComponent<BillionareBase>().baseColor == bulletColor)
+            {
+                return;
+            }
+
+            // deal damage to enemy 
+            other.gameObject.GetComponent<IDamagable>().TakeDamage(bulletDamage, bulletColor);
 
             // destroy this gameObject
             Destroy(gameObject);
         }
-        // destroy the bullet if it hits a wall or a billionare base
-        else if (!other.gameObject.CompareTag("billion"))
+        // destroy the bullet if it hits a wall
+        else if (!other.gameObject.CompareTag("billion") && !other.gameObject.CompareTag("base") && !other.gameObject.CompareTag("flag"))
         {
             Destroy(gameObject);
         }

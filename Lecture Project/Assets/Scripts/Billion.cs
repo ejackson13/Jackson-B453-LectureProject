@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
 
-public class Billion : MonoBehaviour
+public class Billion : MonoBehaviour, IDamagable
 {
     public string billionColor;
     public Vector3 moveTo;
@@ -23,6 +23,7 @@ public class Billion : MonoBehaviour
     public float maxHealth = 100; // the amount of starting health the billion gets
     public float currentHealth; // the amount of health the billion currently has
     public float clickDamage = 25; // the amount of damage the billion takes when being clicked
+    public float xpValue = 10; // the amount of xp the killing base gets when this billion is killed
 
     public GameObject bulletPrefab; // the prefab of the bullets that we shoot
     public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
@@ -53,6 +54,7 @@ public class Billion : MonoBehaviour
 
         PointToNearestEnemy();
 
+        /*
         // check for middle mouse click
         if (Input.GetMouseButtonDown(2))
         {
@@ -62,9 +64,10 @@ public class Billion : MonoBehaviour
             // check if the click occurred over the current billion
             if (GetComponent<Collider2D>().OverlapPoint(mousePos))
             {
-                TakeDamage(clickDamage);
+                TakeDamage(clickDamage, "");
             }
         }
+        */
 
     }
 
@@ -167,7 +170,7 @@ public class Billion : MonoBehaviour
 
 
 
-    public void TakeDamage(float damageDealt)
+    public void TakeDamage(float damageDealt, string attackerColor)
     {
         // decrease health by amount of damage taken
         currentHealth -= damageDealt;
@@ -175,20 +178,36 @@ public class Billion : MonoBehaviour
         // destroy the billion if its health drops to or below zero
         if (currentHealth <= 0 )
         {
+            // get the base whose billion killed this billion
+            GameObject[] allBases = GameObject.FindGameObjectsWithTag("base");
+            GameObject killingBase = null;
+            foreach (GameObject b in allBases)
+            {
+                if (b.GetComponent<BillionareBase>().baseColor == attackerColor)
+                {
+                    killingBase = b;
+                    break;
+                }
+            }
+
+            // dole out experience points to base whose billion killed this billion
+            if (killingBase != null)
+            {
+                killingBase.GetComponent<BillionareBase>().GainXP(xpValue);
+            }
+
             Die();
             return; // prevent any other code from executing
         }
 
         // reduce size of inner circle with lerp
         float scale = Mathf.Lerp(minCircleSize, 1, currentHealth / maxHealth); // use lerp to get scale
-        Debug.Log("Health %: " + currentHealth / maxHealth);
-        Debug.Log("Scale: " + scale);
         gameObject.transform.GetChild(0).transform.localScale = new Vector3(scale, scale, gameObject.transform.GetChild(0).transform.localScale.z); // update scale of just InnerCircle child object
     }
 
 
 
-    private void Die()
+    public void Die()
     {
         Destroy(gameObject);
     }
@@ -198,7 +217,7 @@ public class Billion : MonoBehaviour
     private void PointToNearestEnemy()
     {
         // Get nearest enemy
-        GameObject nearestEnemy = GetNearestEnemyBillion();
+        GameObject nearestEnemy = GetNearestEnemy();
         if (nearestEnemy == null) // return if there are no enemy billions
         {
             return;
@@ -242,33 +261,33 @@ public class Billion : MonoBehaviour
     }
 
 
-    private GameObject GetNearestEnemyBillion()
+    private GameObject GetNearestEnemy()
     {
-        // get all billions on screen
-        GameObject[] allBillions = GameObject.FindGameObjectsWithTag("billion");
+        // get all enemies on screen
+        List<GameObject> allEnemies = IDamagable.GetAllEnemyDamagableObjects(billionColor);
 
-        // make sure we return null if there are no enemy billions
-        if (allBillions.Length == 0 )
+        // make sure we return null if there are no enemies
+        if (allEnemies.Count == 0 )
         {
             return null;
         }
 
-        // get closest billion
-        GameObject nearestBillion = allBillions[0];
+        // get closest enemy
+        GameObject nearestEnemy = allEnemies[0];
         float nearestDist = Mathf.Infinity;
-        foreach (GameObject billion in allBillions)
+        foreach (GameObject enemy in allEnemies)
         {
-            float currentDist = Vector2.Distance(this.transform.position, billion.transform.position); // use vector2 distance so that z values aren't considered in calculation
+            float currentDist = Vector2.Distance(this.transform.position, enemy.transform.position); // use vector2 distance so that z values aren't considered in calculation
 
-            // check that billion is enemy and that it is closer than the previous closest
-            if (billion.GetComponent<Billion>().billionColor != billionColor && currentDist < nearestDist)
+            // check that enemy is closer than the previous closest
+            if (currentDist < nearestDist)
             {
-                nearestBillion = billion;
+                nearestEnemy = enemy;
                 nearestDist = currentDist;
             }
         }
 
-        return nearestBillion;
+        return nearestEnemy;
     }
 
 
