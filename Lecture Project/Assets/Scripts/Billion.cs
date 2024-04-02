@@ -20,15 +20,20 @@ public class Billion : MonoBehaviour, IDamagable
     private int numFlags;
 
     public float minCircleSize = .3f; // the minimum size of the inner circle (as a proportion, so between 0 and 1)
-    public float maxHealth = 100; // the amount of starting health the billion gets
+    public float maxHealth; // the amount of starting health the billion gets
     public float currentHealth; // the amount of health the billion currently has
     public float clickDamage = 25; // the amount of damage the billion takes when being clicked
     public float xpValue = 10; // the amount of xp the killing base gets when this billion is killed
+    
+    public int level; // the level of the billion
+    public float healthMultiplier = 25; // the amount the level is multiplied by to get the amount of health each billion has
+    public float damageMultiplier = 10; // the amount the level is multiplied by to get the amount of damage the billion does
 
     public GameObject bulletPrefab; // the prefab of the bullets that we shoot
     public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
     public float shootInterval = 1.5f; // the interval on which billions will shoot 
     private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
+    public float bulletDamage; // the damage the bullet does
 
     // Start is called before the first frame update
     void Start()
@@ -37,7 +42,13 @@ public class Billion : MonoBehaviour, IDamagable
         reachedStart = false;
         rb = GetComponent<Rigidbody2D>();
         rigTransform = rb.transform;
+
+        maxHealth = 75 + (level * healthMultiplier);
         currentHealth = maxHealth;
+        bulletDamage = 15 + (level * damageMultiplier);
+
+        // set level indicator
+        transform.GetChild(3).GetChild(level-1).gameObject.SetActive(true);
     }
 
     // Update is called once per frame
@@ -251,6 +262,7 @@ public class Billion : MonoBehaviour, IDamagable
 
             // give bullet necessary information
             //bullet.GetComponent<BillionBullet>().bulletColor = billionColor;
+            bullet.GetComponent<BillionBullet>().bulletDamage = bulletDamage;
             bullet.GetComponent<BillionBullet>().startPosition = startPos;
             bullet.GetComponent<BillionBullet>().direction = diff.normalized;
 

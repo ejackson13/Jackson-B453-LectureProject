@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static UnityEditor.PlayerSettings;
@@ -39,9 +40,11 @@ public class BillionareBase : MonoBehaviour, IDamagable
     public float xpValue = 20; // the amount of xp the killing base gets when this base is killed
     public float currentXp = 0; // the current amount of xp the base has
     public float nextLevel = 100; // the amount of xp the base needs to get to the next level
+    public int level = 1; // the level of the base
 
     private Image healthBar; // the image containing the radial health bar UI element
     private Image xpBar; // the image containing the radial xp bar UI element
+    private TextMeshProUGUI levelText; // the text box containing the current level
 
     // Start is called before the first frame update
     void Start()
@@ -64,6 +67,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
         // get the UI elements
         healthBar = transform.GetChild(1).GetChild(0).gameObject.GetComponent<Image>();
         xpBar = transform.GetChild(1).GetChild(1).gameObject.GetComponent<Image>();
+        levelText = transform.GetChild(1).GetChild(2).gameObject.GetComponent<TextMeshProUGUI>();
 
         // initialize UI values
         healthBar.fillAmount = 1;
@@ -225,6 +229,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
         // set color of billion so it knows what to attack (might not be necessary depending on how I structure the rest of the code)
         billion.GetComponent<Billion>().billionColor = baseColor;
         billion.GetComponent<Billion>().moveTo = moveTo;
+        billion.GetComponent<Billion>().level = level;
         billion.transform.SetParent(transform, true); // make billions children of the base that spawns them
     }
 
@@ -411,6 +416,22 @@ public class BillionareBase : MonoBehaviour, IDamagable
 
     public void LevelUp()
     {
+        if (level == 9)
+        {
+            return;
+        }
 
+        // carry over xp to next level
+        currentXp = currentXp - nextLevel;
+
+        // increase threshold
+        nextLevel = (int)(nextLevel * 1.75f);
+
+        // increase level
+        level++;
+
+
+        // update UI
+        levelText.text = $"{level}";
     }
 }
