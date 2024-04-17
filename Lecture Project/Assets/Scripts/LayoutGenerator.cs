@@ -7,28 +7,32 @@ using UnityEngine.Tilemaps;
 
 public class LayoutGenerator : MonoBehaviour
 {
-    public Tilemap tilemap;
-    public TileBase tile;
-    public int tileMapSizeX = 72; // the x dimension of the play area (in number of grids)
-    public int tileMapSizeY = 40; // the y dimension of the play area (in number of grids)
-    public Vector3Int tilemapCenterInGrid = new Vector3Int(38, 22, 0);
-    public int maxXIn = 14; // the max number of blocks that can jut in from the edge in the x direction
-    public int maxYIn = 10; // the max number of blocks that can jut in from the edge in the y direction
-    bool[,] blockPlacements; // grid to track where blocks should be placed
+    [SerializeField] private Tilemap tilemap;
+    [SerializeField] private TileBase tile;
+    [SerializeField] private int tileMapSizeX = 72; // the x dimension of the play area (in number of grids)
+    [SerializeField] private int tileMapSizeY = 40; // the y dimension of the play area (in number of grids)
+    [SerializeField] private Vector3Int tilemapCenterInGrid = new Vector3Int(38, 22, 0);
+    [SerializeField] private int maxXIn = 14; // the max number of blocks that can jut in from the edge in the x direction
+    [SerializeField] private int maxYIn = 10; // the max number of blocks that can jut in from the edge in the y direction
+    [SerializeField] private bool[,] blockPlacements; // grid to track where blocks should be placed
+    [SerializeField] private GameObject[] basePrefabs; // prefabs for billion bases
+    private Vector3[] basePositions; // array of the bases' positions for drawing gizmos - only used for testing
+    [SerializeField] private float wallDist; // radius around base spawn location where there should be be no walls for a base to be place
+    [SerializeField] private float baseDist; // radius in addition to shoot range to not spawn bases within proximity to other bases
+
 
     // Start is called before the first frame update
     void Start()
     {
+        baseDist = basePrefabs[0].GetComponent<BillionareBase>().shootDistance + baseDist;
+
+        basePositions = new Vector3[basePrefabs.Length];
         blockPlacements = new bool[tileMapSizeY, tileMapSizeX];
         GenerateGrid();
         DrawLevel();
+        //PlaceBases();
+        StartCoroutine(PlaceBases());
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-    }
-
 
     void DrawLevel()
     {
@@ -63,6 +67,11 @@ public class LayoutGenerator : MonoBehaviour
             //yAmt = UnityEngine.Random.Range(1, spaceLeft + 1);
             yAmt = UnityEngine.Random.Range(Mathf.Min(spaceLeft, 6), Mathf.Min(spaceLeft + 1, 13));
             spaceLeft -= yAmt;
+            if (spaceLeft < 4)
+            {
+                yAmt += spaceLeft;
+                spaceLeft = 0;
+            }
             Debug.Log($"Y - {yAmt} | X - {xAmt}");
 
             // fill area in grid
@@ -88,6 +97,11 @@ public class LayoutGenerator : MonoBehaviour
             //yAmt = UnityEngine.Random.Range(1, spaceLeft + 1);
             yAmt = UnityEngine.Random.Range(Mathf.Min(spaceLeft, 6), Mathf.Min(spaceLeft + 1, 13));
             spaceLeft -= yAmt;
+            if (spaceLeft < 4)
+            {
+                yAmt += spaceLeft;
+                spaceLeft = 0;
+            }
 
             Debug.Log($"Y - {yAmt} | X - {xAmt}");
 
@@ -133,6 +147,11 @@ public class LayoutGenerator : MonoBehaviour
             //xAmt = UnityEngine.Random.Range(1, spaceLeft + 1);
             xAmt = UnityEngine.Random.Range(Mathf.Min(spaceLeft, 12), Mathf.Min(spaceLeft + 1, 24));
             spaceLeft -= xAmt;
+            if (spaceLeft < 4)
+            {
+                xAmt += spaceLeft;
+                spaceLeft = 0;
+            }
 
             Debug.Log($"Y - {yAmt} | X - {xAmt}");
 
@@ -178,6 +197,11 @@ public class LayoutGenerator : MonoBehaviour
             //xAmt = UnityEngine.Random.Range(1, spaceLeft + 1);
             xAmt = UnityEngine.Random.Range(Mathf.Min(spaceLeft, 12), Mathf.Min(spaceLeft + 1, 24));
             spaceLeft -= xAmt;
+            if (spaceLeft < 4)
+            {
+                xAmt += spaceLeft;
+                spaceLeft = 0;
+            }
 
             Debug.Log($"Y - {yAmt} | X - {xAmt}");
 
@@ -200,7 +224,225 @@ public class LayoutGenerator : MonoBehaviour
     }
 
 
-    void PrintGrid()
+    IEnumerator PlaceBases()
+    {
+        yield return new WaitForEndOfFrame();
+        AttemptToPlaceBase(0, 0, tileMapSizeY / 2, 0, 1, -1); // top left corner
+        yield return new WaitForEndOfFrame();
+        AttemptToPlaceBase(1, tileMapSizeY-1, tileMapSizeY / 2, 0, -1, -1); // bottom left corner
+        yield return new WaitForEndOfFrame();
+        AttemptToPlaceBase(2, 0, tileMapSizeY / 2, tileMapSizeX-1, 1, 1); // top right corner
+        yield return new WaitForEndOfFrame();
+        AttemptToPlaceBase(3, tileMapSizeY-1, tileMapSizeY / 2, tileMapSizeX-1, -1, 1); // bottom right corner
+    }
+
+
+    /**
+     * Method that sweeps in diagonals to check for the best place to place a base
+     * 
+     * @param prefabIndex - the index in basePrefabs array of the base we want to place
+     * @param startingY - the index in blockPlacements of the y value we want to start the sweep at, this will be either 0 or tileMapSizeY-1 to indicate starting at either the top or bottom
+     * @param endingY - the index in blockPlacements of the y value we want to end the sweep at, this will generally be tileMapSizeY/2
+     * @param startingX - the index in blockPlacements of the x value we want to start at, this will be either 0 or tileMapSizeX-1 to indicate starting at either the left or right edge
+     * @param yDir - the direction we are moving through indices in the y direction - 1 if we are going top to bottom, -1 if we are going bottom to top
+     * @param xDir - the direction we are moving through indices in the x direction - 1 if we are going left to right, -1 if we are going right to left;
+     */
+    private void AttemptToPlaceBase(int prefabIndex, int startingY, int endingY, int startingX, int yDir, int xDir)
+    {
+        // used as a failsafe so that the base will still spawn if there is not enough distance from other bases - will try to spawn as far away from an enemy base as possible
+        Vector3 bestAvailablePosition = Vector3.zero;
+        bestAvailablePosition.z = -100;
+        float maxDistFromBase = 0;
+
+        //Debug.Log($"Scanning for {prefabIndex}");
+
+        // try placing it in every tile starting from the top left and moving in diagonals until we get to the vertical center;
+        bool placed = false;
+        for (int i = 0; i != endingY-startingY; i += yDir)
+        {
+            int r = startingY;
+            int c = startingX - (Mathf.Abs(i) * xDir);
+            while (r != startingY+i + yDir)
+            {
+                //Debug.Log($"{r}, {c}");
+
+                // check that there isn't a wall there
+                if (!blockPlacements[r, c])
+                {
+                    // get the worldspace position of the current tile
+                    Vector3 attemptedPlacePos = tilemap.GetCellCenterWorld(new Vector3Int(c - tilemapCenterInGrid.x + 1, tilemapCenterInGrid.y - r - 2, 0));
+
+                    // check that the base will not be too close to a wall
+                    List<Collider2D> overlaps = new List<Collider2D>();
+                    ContactFilter2D cf = new ContactFilter2D();
+                    Physics2D.OverlapCircle(attemptedPlacePos, wallDist, cf.NoFilter(), overlaps);
+
+                    bool overlapsWall = false;
+                    for (int j = 0; j < overlaps.Count; j++)
+                    {
+                        if (overlaps[j].gameObject.CompareTag("wall"))
+                        {
+                            overlapsWall = true;
+                            break;
+                        }
+                    }
+
+                    if (!overlapsWall)
+                    {
+                        Debug.Log("Passed first check");
+
+                        // check that the base will not be too close to another base
+                        overlaps = new List<Collider2D>();
+                        Physics2D.OverlapCircle(attemptedPlacePos, baseDist, cf.NoFilter(), overlaps);
+
+                        bool overlapsBase = false;
+                        for (int j = 0; j < overlaps.Count; j++)
+                        {
+                            if (overlaps[j].gameObject.CompareTag("base"))
+                            {
+                                overlapsBase = true;
+
+                                // check if this is the farthest possible distance from another base
+                                if (Vector3.Distance(attemptedPlacePos, overlaps[j].gameObject.transform.position) > maxDistFromBase)
+                                {
+                                    bestAvailablePosition = attemptedPlacePos;
+                                    maxDistFromBase = Vector3.Distance(attemptedPlacePos, overlaps[j].gameObject.transform.position);
+                                }
+                            }
+                        }
+
+                        // if it isn't too close to a base, spawn base and exit loop
+                        if (!overlapsBase)
+                        {
+                            Debug.Log($"Base {prefabIndex} placed properly");
+
+                            // instantiate base
+                            GameObject createdBase = Instantiate(basePrefabs[prefabIndex]);
+                            createdBase.transform.position = attemptedPlacePos;
+                            basePositions[prefabIndex] = attemptedPlacePos;
+                            //Debug.Log(attemptedPlacePos);
+
+                            placed = true;
+                            return;
+                        }
+                    }
+                }
+
+                // move in a diagonal
+                r += yDir;
+                c += xDir;
+            }
+        }
+
+
+        // continue moving through the quadrant in diagonals
+        for (int i = 0; i != tileMapSizeX/2 - Mathf.Abs(endingY - startingY); i += 1)
+        {
+            int r = startingY;
+            int c = startingX - ((i+Mathf.Abs(endingY-startingY)) * (xDir));
+            while (r != endingY+yDir)
+            {
+                //Debug.Log($"{r}, {c}");
+
+                // check that there isn't a wall there
+                if (!blockPlacements[r, c])
+                {
+                    // get the worldspace position of the current tile
+                    Vector3 attemptedPlacePos = tilemap.GetCellCenterWorld(new Vector3Int(c - tilemapCenterInGrid.x + 1, tilemapCenterInGrid.y - r - 2, 0));
+
+                    // check that the base will not be too close to a wall
+                    List<Collider2D> overlaps = new List<Collider2D>();
+                    ContactFilter2D cf = new ContactFilter2D();
+                    Physics2D.OverlapCircle(attemptedPlacePos, wallDist, cf.NoFilter(), overlaps);
+
+                    bool overlapsWall = false;
+                    for (int j = 0; j < overlaps.Count; j++)
+                    {
+                        if (overlaps[j].gameObject.CompareTag("wall"))
+                        {
+                            overlapsWall = true;
+                            break;
+                        }
+                    }
+
+                    if (!overlapsWall)
+                    {
+                        //Debug.Log("Passed first check");
+
+                        // check that the base will not be too close to another base
+                        overlaps = new List<Collider2D>();
+                        Physics2D.OverlapCircle(attemptedPlacePos, baseDist, cf.NoFilter(), overlaps);
+
+                        bool overlapsBase = false;
+                        for (int j = 0; j < overlaps.Count; j++)
+                        {
+                            if (overlaps[j].gameObject.CompareTag("base"))
+                            {
+                                overlapsBase = true;
+
+                                // check if this is the farthest possible distance from another base
+                                if (Vector3.Distance(attemptedPlacePos, overlaps[j].gameObject.transform.position) > maxDistFromBase)
+                                {
+                                    bestAvailablePosition = attemptedPlacePos;
+                                    maxDistFromBase = Vector3.Distance(attemptedPlacePos, overlaps[j].gameObject.transform.position);
+                                }
+                            }
+                        }
+
+                        // if it isn't too close to a base, spawn base and exit loop
+                        if (!overlapsBase)
+                        {
+                            Debug.Log($"Base {prefabIndex} placed properly");
+
+                            // instantiate base
+                            GameObject createdBase = Instantiate(basePrefabs[prefabIndex]);
+                            createdBase.transform.position = attemptedPlacePos;
+                            basePositions[prefabIndex] = attemptedPlacePos;
+                            //Debug.Log(attemptedPlacePos);
+
+                            placed = true;
+                            return;
+                        }
+                    }
+                }
+
+                // move in a diagonal
+                r += yDir;
+                c += xDir;
+            }
+        }
+
+
+            // if the base wasn't placed, put it at the best position possible
+            if (!placed)
+        {
+            Debug.Log($"Base {prefabIndex} placed with best guess");
+
+            GameObject createdBase = Instantiate(basePrefabs[prefabIndex]);
+            createdBase.transform.position = bestAvailablePosition;
+            basePositions[prefabIndex] = bestAvailablePosition;
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (basePositions == null)
+        {
+            return;
+        }
+
+        for (int i=0; i<basePositions.Length; i++)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(basePositions[i], wallDist);
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(basePositions[i], baseDist);
+
+        }
+    }
+
+
+    private void PrintGrid()
     {
         string grid = "";
         for (int r = 0; r < tileMapSizeY; r++)

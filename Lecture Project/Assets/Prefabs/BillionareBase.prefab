@@ -247,7 +247,7 @@ MonoBehaviour:
   shootDistance: 3.5
   shootInterval: 1.75
   bulletSpeed: 3
-  bulletDistance: 4
+  bulletDistance: 3
   bulletDamage: 50
   maxHealth: 500
   currentHealth: 0
