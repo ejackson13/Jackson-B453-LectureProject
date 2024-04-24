@@ -9,6 +9,7 @@ public interface IDamagable
     public void Die();
 
 
+    // static helper method to get all enemy billions and bases based on a given base/billion color
     public static List<GameObject> GetAllEnemyDamagableObjects(string testColor)
     {
         // get all enemy billions

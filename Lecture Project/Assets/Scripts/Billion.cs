@@ -8,41 +8,40 @@ public class Billion : MonoBehaviour, IDamagable
 {
     public string billionColor;
     public Vector3 moveTo;
-    public bool reachedStart;
+    private bool reachedStart;
     private Transform rigTransform;
     private Rigidbody2D rb;
 
     private Transform closestFlag;
     private Vector3 flagLastPos; // the last position of the closestFlag - used so that we can detect when a flag moves and we don't have to check for a new closest flag every frame\
     private Vector3 startPosition; // the position the billion started at when the flag was moved
-    //private float slope; // the slope of the velocity graph
-    public float maxSpeed; // the max speed the billions can reach
-    private int numFlags;
+    [SerializeField] private float maxSpeed; // the max speed the billions can reach
 
-    public float minCircleSize = .3f; // the minimum size of the inner circle (as a proportion, so between 0 and 1)
-    public float maxHealth; // the amount of starting health the billion gets
-    public float currentHealth; // the amount of health the billion currently has
-    public float clickDamage = 25; // the amount of damage the billion takes when being clicked
-    public float xpValue = 10; // the amount of xp the killing base gets when this billion is killed
+    [SerializeField] private float minCircleSize = .3f; // the minimum size of the inner circle (as a proportion, so between 0 and 1)
+    [SerializeField] private float maxHealth; // the amount of starting health the billion gets
+    [SerializeField] private float currentHealth; // the amount of health the billion currently has
+    [SerializeField] private float xpValue = 10; // the amount of xp the killing base gets when this billion is killed
     
     public int level; // the level of the billion
-    public float healthMultiplier = 25; // the amount the level is multiplied by to get the amount of health each billion has
-    public float damageMultiplier = 10; // the amount the level is multiplied by to get the amount of damage the billion does
+    [SerializeField] private float healthMultiplier = 25; // the amount the level is multiplied by to get the amount of health each billion has
+    [SerializeField] private float damageMultiplier = 10; // the amount the level is multiplied by to get the amount of damage the billion does
 
-    public GameObject bulletPrefab; // the prefab of the bullets that we shoot
-    public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
-    public float shootInterval = 1.5f; // the interval on which billions will shoot 
-    private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
-    public float bulletDamage; // the damage the bullet does
+    [SerializeField] private GameObject bulletPrefab; // the prefab of the bullets that we shoot
+    [SerializeField] private float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
+    [SerializeField] private float shootInterval = 1.5f; // the interval on which billions will shoot 
+    [SerializeField] private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
+    [SerializeField] private float bulletDamage; // the damage the bullet does
 
     // Start is called before the first frame update
     void Start()
     {
+        // set variables
         closestFlag = null;
         reachedStart = false;
         rb = GetComponent<Rigidbody2D>();
         rigTransform = rb.transform;
 
+        // set max health and damage based on level
         maxHealth = 75 + (level * healthMultiplier);
         currentHealth = maxHealth;
         bulletDamage = 15 + (level * damageMultiplier);
@@ -54,6 +53,7 @@ public class Billion : MonoBehaviour, IDamagable
     // Update is called once per frame
     void Update()
     {
+        // move to the start position if we haven't reached it and if there are no flags
         if (!reachedStart)
         {
             MoveToStart();
@@ -63,22 +63,8 @@ public class Billion : MonoBehaviour, IDamagable
             MoveToFlag();
         }
 
+        // always point to nearest enemy
         PointToNearestEnemy();
-
-        /*
-        // check for middle mouse click
-        if (Input.GetMouseButtonDown(2))
-        {
-            // get mouse position
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            // check if the click occurred over the current billion
-            if (GetComponent<Collider2D>().OverlapPoint(mousePos))
-            {
-                TakeDamage(clickDamage, "");
-            }
-        }
-        */
 
     }
 
@@ -103,13 +89,11 @@ public class Billion : MonoBehaviour, IDamagable
                 {
                     closestDist = currentDist;
                     closestFlagFound = f.transform;
-                    //flagLastPos = new Vector3(f.transform.position.x, f.transform.position.y, f.transform.position.z);
-                    //startPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
                 }
             }
 
             // check that the flag moved before moving toward it
-            if (closestFlag == null || closestFlagFound.position != closestFlag.position)
+            if (closestFlag == null || closestFlagFound.position != flagLastPos)
             {
                 closestFlag = closestFlagFound;
                 flagLastPos = new Vector3(closestFlag.position.x, closestFlag.position.y, closestFlag.position.z);
@@ -135,23 +119,13 @@ public class Billion : MonoBehaviour, IDamagable
     // moves billion to start position, pushing other billions out of the way
     private void MoveToStart()
     {
-        /*
-        float xDiff = moveTo.x - rigTransform.position.x;
-        float yDiff = rigTransform.position.y - moveTo.y;
-
-        float xChange = xDiff < .1f ? xDiff : .1f;
-        float yChange = yDiff < .1f ? yDiff : .1f;
-
-        rigTransform.position = new Vector3(rigTransform.position.x + xChange, rigTransform.position.y - yChange, rigTransform.position.z);
-
-        reachedStart = rigTransform.position.x == moveTo.x && rigTransform.position.y == moveTo.y;
-        */
-
+        // get the difference to the goal position
         float xDiff = moveTo.x - rigTransform.position.x;
         float yDiff = moveTo.y - rigTransform.position.y;
 
         float xVel;
         float yVel;
+        // set x velocity
         if (Mathf.Abs(xDiff) < .25f)
         {
             xVel = 0;
@@ -163,6 +137,7 @@ public class Billion : MonoBehaviour, IDamagable
             xVel = .1f;
         }
 
+        // set y velocity
         if (Mathf.Abs(yDiff) < .25f)
         {
             yVel = 0;
@@ -174,13 +149,15 @@ public class Billion : MonoBehaviour, IDamagable
             yVel = .1f;
         }
 
+        // set the velocity
         rb.velocity = new Vector2(xVel, yVel);
         List<GameObject> allFlags = BillionFlag.GetAllFlagsByColor(billionColor); // check if there are any flags out and don't bother moving to starting point if so
-        reachedStart = (yVel == 0 && xVel == 0) || (allFlags.Count > 0);
+        reachedStart = (yVel == 0 && xVel == 0) || (allFlags.Count > 0); // stop moving to start if the start point has been reached or if there is a flag on the field
     }
 
 
 
+    // handles whenever the billion is damaged by enemy bullets
     public void TakeDamage(float damageDealt, string attackerColor)
     {
         // decrease health by amount of damage taken
@@ -218,6 +195,7 @@ public class Billion : MonoBehaviour, IDamagable
 
 
 
+    // destroys the game object
     public void Die()
     {
         Destroy(gameObject);
@@ -225,6 +203,7 @@ public class Billion : MonoBehaviour, IDamagable
 
 
 
+    // angles the billion at the nearest enemy billion or base and fires if they are close enough
     private void PointToNearestEnemy()
     {
         // Get nearest enemy
@@ -273,6 +252,7 @@ public class Billion : MonoBehaviour, IDamagable
     }
 
 
+    // returns the nearest enemy billion or base to the current billion
     private GameObject GetNearestEnemy()
     {
         // get all enemies on screen

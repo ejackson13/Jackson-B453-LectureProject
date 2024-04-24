@@ -36,6 +36,7 @@ public class BillionBullet : MonoBehaviour
 
 
 
+    // handles when bullet hits an object
     private void OnTriggerEnter2D(Collider2D other)
     {
         // check if the object it hits a damagable object

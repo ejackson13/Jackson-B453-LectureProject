@@ -10,9 +10,11 @@ public class BillionareBase : MonoBehaviour, IDamagable
 {
     [Header("General Info")]
     public string baseColor;
-    public GameObject billionPrefab;
-    public float spawnInterval;
-    public GameObject flagPrefab;
+    [SerializeField] private float spawnInterval;
+
+    [Header("Prefabs and sprites")]
+    [SerializeField] private GameObject billionPrefab;
+    [SerializeField] private GameObject flagPrefab;
 
     private IEnumerator billionSpawner;
     private CircleCollider2D circleCollider;
@@ -20,27 +22,28 @@ public class BillionareBase : MonoBehaviour, IDamagable
 
     private Vector3 spawnPosition;
     private Vector3 moveTo;
-    public int numFlags; // the number of flags of the current color currently on screen
+    private int numFlags; // the number of flags of the current color currently on screen
     private GameObject flagClicked; // the initial position the flag that is being clicked and dragged
-    private Boolean wasFlagClicked = false; // used to track whether or not a flag was initially clicked (to determine if a line needs to be drawn when clicking and dragging)
+    private bool wasFlagClicked = false; // used to track whether or not a flag was initially clicked (to determine if a line needs to be drawn when clicking and dragging)
+
 
     [Header("Shooting variables")]
-    public float turnSpeed = 2f; // the max speed at which the base will rotate in a given frame (in degrees)
-    public GameObject bulletPrefab; // the prefab of the bullets that we shoot
+    [SerializeField] private float turnSpeed = 2f; // the max speed at which the base will rotate in a given frame (in degrees)
+    [SerializeField] private GameObject bulletPrefab; // the prefab of the bullets that we shoot
     public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
-    public float shootInterval = 1.5f; // the interval on which billions will shoot 
+    [SerializeField] private float shootInterval = 1.5f; // the interval on which billions will shoot 
     private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
-    public float bulletSpeed = 3f; // the speed at which a bullet will travel
-    public float bulletDistance = 3; // the max distance a bullet will travel
-    public float bulletDamage = 40; // the damage the bullet deals
+    [SerializeField] private float bulletSpeed = 3f; // the speed at which a bullet will travel
+    [SerializeField] private float bulletDistance = 3; // the max distance a bullet will travel
+    [SerializeField] private float bulletDamage = 40; // the damage the bullet deals
 
     [Header("Health and XP")]
-    public float maxHealth = 200; // the amount of starting health the base gets
-    public float currentHealth; // the amount of health the base currently has
-    public float xpValue = 20; // the amount of xp the killing base gets when this base is killed
-    public float currentXp = 0; // the current amount of xp the base has
-    public float nextLevel = 100; // the amount of xp the base needs to get to the next level
-    public int level = 1; // the level of the base
+    [SerializeField] private float maxHealth = 200; // the amount of starting health the base gets
+    private float currentHealth; // the amount of health the base currently has
+    [SerializeField] private float xpValue = 20; // the amount of xp the killing base gets when this base is killed
+    private float currentXp = 0; // the current amount of xp the base has
+    [SerializeField] private float nextLevel = 100; // the amount of xp the base needs to get to the next level
+    private int level = 1; // the level of the base
 
     private Image healthBar; // the image containing the radial health bar UI element
     private Image xpBar; // the image containing the radial xp bar UI element
@@ -60,7 +63,6 @@ public class BillionareBase : MonoBehaviour, IDamagable
         lineRenderer.SetPositions(new Vector3[] {Vector3.zero, Vector3.zero});
 
         // set spawn position of billions to be in bottom right corner of bases
-        //spawnPosition = new Vector3(transform.position.x + (collider.radius * transform.localScale.x + .1f), transform.position.y - (collider.radius * transform.localScale.x + .1f), transform.position.z);
         spawnPosition = transform.position;
         moveTo = new Vector3(transform.position.x + (circleCollider.radius * transform.localScale.x + .1f), transform.position.y - (circleCollider.radius * transform.localScale.x + .1f), transform.position.z);
 
@@ -159,8 +161,6 @@ public class BillionareBase : MonoBehaviour, IDamagable
     // method that either moves or instantiates a flag at the given location
     private void Place_or_Move_Flag(Vector3 pos)
     {
-        Debug.Log(baseColor + " place");
-        Debug.Log(numFlags);
         // if there are less than 2 flags, instantiate new flag
         if (numFlags < 2)
         {
@@ -208,6 +208,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
     }
 
 
+    // Coroutine that continually spawns billions at a specified interval
     IEnumerator Spawn_Billions()
     {
         yield return new WaitForSeconds(spawnInterval);
@@ -220,6 +221,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
     }
 
 
+    // spawns billions and gives them the necessary information
     void Instantiate_Billion()
     {
         
@@ -234,6 +236,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
     }
 
 
+    // rotates base to aim at nearest enemy and shoot at it if it is close enough
     private void PointToNearestEnemy()
     {
         // Get nearest enemy
@@ -307,7 +310,6 @@ public class BillionareBase : MonoBehaviour, IDamagable
 
             // rotate bullet according to direction billion is facing
             bullet.transform.eulerAngles = new Vector3(0, 0, newRot - 90);
-            //Debug.Log(billionColor + " spawned at: " + startPos + " | billion at: " + transform.position + " | actually at: " + bullet.transform.position);
 
             // give bullet necessary information
             //bullet.GetComponent<BillionBullet>().bulletColor = billionColor;
@@ -324,6 +326,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
     }
 
 
+    // returns the enemy billion or base nearest to this base
     private GameObject GetNearestEnemy()
     {
         // get all enemies on screen
@@ -355,6 +358,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
 
 
 
+    // handles the base taking damage and dying if the damage is lethal
     public void TakeDamage(float damageDealt, string attackerColor)
     {
         // decrease health by amount of damage taken
@@ -391,7 +395,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
     }
 
 
-
+    // destroys the base
     public void Die()
     {
         Destroy(gameObject);
@@ -399,6 +403,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
 
 
 
+    // handles gaining xp when an enemy billion or base is killed
     public void GainXP(float xpAmount)
     {
         currentXp += xpAmount;
@@ -414,6 +419,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
     }
 
 
+    // handles leveling up when the xp threshold is reached
     public void LevelUp()
     {
         if (level == 9)

@@ -30,10 +30,11 @@ public class LayoutGenerator : MonoBehaviour
         blockPlacements = new bool[tileMapSizeY, tileMapSizeX];
         GenerateGrid();
         DrawLevel();
-        //PlaceBases();
         StartCoroutine(PlaceBases());
     }
 
+
+    // draw tiles into tilemap based on what's in blockPlacements - place a tile wherever the value is true
     void DrawLevel()
     {
         //tilemap.SetTile(new Vector3Int(0, 0, 0), tile); // used to find center
@@ -52,6 +53,7 @@ public class LayoutGenerator : MonoBehaviour
 
 
 
+    // procedurally generates the layout of the level to blockPlacements
     void GenerateGrid()
     {
         int xAmt = 0;
@@ -218,12 +220,7 @@ public class LayoutGenerator : MonoBehaviour
     }
 
 
-    void PlaceMiddleBlocks()
-    {
-
-    }
-
-
+    // Coroutine to place bases using the AttemptToPlaceBase function - uses waits to make sure that the bases know where the others are when being placed
     IEnumerator PlaceBases()
     {
         yield return new WaitForEndOfFrame();
@@ -424,6 +421,8 @@ public class LayoutGenerator : MonoBehaviour
         }
     }
 
+
+    // Draw gizmos to visualize radius around bases to see if they are placed appropriately
     private void OnDrawGizmos()
     {
         if (basePositions == null)
@@ -439,20 +438,5 @@ public class LayoutGenerator : MonoBehaviour
             Gizmos.DrawWireSphere(basePositions[i], baseDist);
 
         }
-    }
-
-
-    private void PrintGrid()
-    {
-        string grid = "";
-        for (int r = 0; r < tileMapSizeY; r++)
-        {
-            for (int c = 0; c < tileMapSizeX; c++)
-            {
-                grid += blockPlacements[r, c] + " ";
-            }
-            grid += "\n";
-        }
-        Debug.Log(grid);
     }
 }
