@@ -133,7 +133,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b26d3fee6f79914f82540b2db093fa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletColor: blue
+  bulletColor: 
   bulletSpeed: 5
   bulletDistance: 4
   bulletDamage: 25

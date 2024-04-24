@@ -442,23 +442,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseColor: blue
-  billionPrefab: {fileID: 5118736099859765178, guid: a68f6ed4c14db4f4584bdd695b3dfff0, type: 3}
   spawnInterval: 2
-  flagPrefab: {fileID: 6542742122287192360, guid: 3679f9d76ca7aa84cb0e365325b57b42, type: 3}
-  numFlags: 0
+  billionPrefab: {fileID: 5118736099859765178, guid: b67c637218bd4c541a689c32c375aa84, type: 3}
+  flagPrefab: {fileID: 6542742122287192360, guid: 5923710b34b6ea14a8e7c5abad41f9df, type: 3}
+  bulletPrefab: {fileID: 1672007767689862694, guid: 7adee48a1ba376445b6745e2cfe05799, type: 3}
+  billionSprite: {fileID: 21300000, guid: 6f4119a15639c8241b51d304123f4ced, type: 3}
+  flagSprite: {fileID: 21300000, guid: c080132232b291d41abaa35243b96011, type: 3}
+  bulletSprite: {fileID: 21300000, guid: 4bd3d17192bbab4498d08a45bb9660d8, type: 3}
+  billionBulletSprite: {fileID: 21300000, guid: 4bd3d17192bbab4498d08a45bb9660d8, type: 3}
   turnSpeed: 0.05
-  bulletPrefab: {fileID: 1672007767689862694, guid: ca7a944ee17b80a4cbf810eddaf3fc51, type: 3}
   shootDistance: 3.5
   shootInterval: 1.75
   bulletSpeed: 3
   bulletDistance: 3
   bulletDamage: 50
   maxHealth: 500
-  currentHealth: 200
   xpValue: 20
-  currentXp: 0
   nextLevel: 100
-  level: 1
 --- !u!58 &7296252511361668010
 CircleCollider2D:
   m_ObjectHideFlags: 0

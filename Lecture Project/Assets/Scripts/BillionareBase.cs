@@ -13,8 +13,13 @@ public class BillionareBase : MonoBehaviour, IDamagable
     [SerializeField] private float spawnInterval;
 
     [Header("Prefabs and sprites")]
-    [SerializeField] private GameObject billionPrefab;
-    [SerializeField] private GameObject flagPrefab;
+    [SerializeField] private GameObject billionPrefab; // the prefab of the billions that are spawned
+    [SerializeField] private GameObject flagPrefab; // the prefab of the flags we spawn
+    [SerializeField] private GameObject bulletPrefab; // the prefab of the bullets that we shoot
+    [SerializeField] private Sprite billionSprite; // the sprite of the billions we spawn
+    [SerializeField] private Sprite flagSprite; // the sprite of the flags we spawn
+    [SerializeField] private Sprite bulletSprite; // the sprite of the bullets we spawn
+    [SerializeField] private Sprite billionBulletSprite; // the sprite of the bullets our billions spawn
 
     private IEnumerator billionSpawner;
     private CircleCollider2D circleCollider;
@@ -29,7 +34,6 @@ public class BillionareBase : MonoBehaviour, IDamagable
 
     [Header("Shooting variables")]
     [SerializeField] private float turnSpeed = 2f; // the max speed at which the base will rotate in a given frame (in degrees)
-    [SerializeField] private GameObject bulletPrefab; // the prefab of the bullets that we shoot
     public float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
     [SerializeField] private float shootInterval = 1.5f; // the interval on which billions will shoot 
     private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
@@ -166,6 +170,7 @@ public class BillionareBase : MonoBehaviour, IDamagable
         {
             Debug.Log("Create new " + baseColor);
             GameObject newFlag = Instantiate(flagPrefab, pos, Quaternion.identity);
+            newFlag.GetComponent<SpriteRenderer>().sprite = flagSprite;
             newFlag.transform.SetParent(transform, true); // make the flag a child of the current base (keeping the world position of the flag as set in the previous line)
             newFlag.GetComponent<BillionFlag>().flagColor = baseColor; // set the color of the flag in its script
             numFlags++;
@@ -229,9 +234,11 @@ public class BillionareBase : MonoBehaviour, IDamagable
         GameObject billion = Instantiate(billionPrefab, spawnPosition, Quaternion.identity);
 
         // set color of billion so it knows what to attack (might not be necessary depending on how I structure the rest of the code)
+        billion.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = billionSprite;
         billion.GetComponent<Billion>().billionColor = baseColor;
         billion.GetComponent<Billion>().moveTo = moveTo;
         billion.GetComponent<Billion>().level = level;
+        billion.GetComponent<Billion>().bulletSprite = billionBulletSprite; 
         billion.transform.SetParent(transform, true); // make billions children of the base that spawns them
     }
 
@@ -312,7 +319,8 @@ public class BillionareBase : MonoBehaviour, IDamagable
             bullet.transform.eulerAngles = new Vector3(0, 0, newRot - 90);
 
             // give bullet necessary information
-            //bullet.GetComponent<BillionBullet>().bulletColor = billionColor;
+            bullet.GetComponent<BillionBullet>().bulletColor = baseColor;
+            bullet.GetComponent<SpriteRenderer>().sprite = bulletSprite;
             bullet.GetComponent<BillionBullet>().startPosition = startPos;
             bullet.GetComponent<BillionBullet>().direction = direction.normalized;
             bullet.GetComponent <BillionBullet>().bulletSpeed = bulletSpeed;

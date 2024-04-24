@@ -2923,7 +2923,8 @@ MonoBehaviour:
   level: 0
   healthMultiplier: 25
   damageMultiplier: 10
-  bulletPrefab: {fileID: 1672007767689862694, guid: 7c7ee704cbca405499f4d05eedf588a7, type: 3}
+  bulletPrefab: {fileID: 1672007767689862694, guid: 5bc62a206d8f9cd42a0d90b2dc45c2a6, type: 3}
+  bulletSprite: {fileID: 0}
   shootDistance: 3
   shootInterval: 1
   nextFire: 0

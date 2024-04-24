@@ -27,6 +27,7 @@ public class Billion : MonoBehaviour, IDamagable
     [SerializeField] private float damageMultiplier = 10; // the amount the level is multiplied by to get the amount of damage the billion does
 
     [SerializeField] private GameObject bulletPrefab; // the prefab of the bullets that we shoot
+    public Sprite bulletSprite; // the sprite of the bullets we shoot
     [SerializeField] private float shootDistance = 5f; // the max distance to an enemy billion where a billion will fire
     [SerializeField] private float shootInterval = 1.5f; // the interval on which billions will shoot 
     [SerializeField] private float nextFire = 0; // the time in seconds from game start at which the billion can fire its next shot
@@ -240,7 +241,8 @@ public class Billion : MonoBehaviour, IDamagable
             //Debug.Log(billionColor + " spawned at: " + startPos + " | billion at: " + transform.position + " | actually at: " + bullet.transform.position);
 
             // give bullet necessary information
-            //bullet.GetComponent<BillionBullet>().bulletColor = billionColor;
+            bullet.GetComponent<BillionBullet>().bulletColor = billionColor;
+            bullet.GetComponent<SpriteRenderer>().sprite = bulletSprite;
             bullet.GetComponent<BillionBullet>().bulletDamage = bulletDamage;
             bullet.GetComponent<BillionBullet>().startPosition = startPos;
             bullet.GetComponent<BillionBullet>().direction = diff.normalized;
